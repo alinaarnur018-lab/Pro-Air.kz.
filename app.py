@@ -2,122 +2,81 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-import requests
-from datetime import datetime, timedelta
+import plotly.express as px
 
-# --- КОНФИГУРАЦИЯ СТРАНИЦЫ ---
-st.set_page_config(page_title="ALGORITHM | Система Прогнозирования", layout="wide")
+# Данные для карты (пример координат районов Алматы)
+# В реальном коде сюда полетят данные из твоего API
+locations = pd.DataFrame({
+    'Район': ['Медеуский', 'Алмалинский', 'Бостандыкский', 'Алатауский', 'Жетысуский'],
+    'lat': [43.238, 43.255, 43.220, 43.280, 43.300],
+    'lon': [76.945, 76.910, 76.920, 76.850, 76.930],
+    'PM25': [120, 160, 110, 210, 195] # Пример уровня загрязнения
+})
 
-# Твой API KEY (Вставь свой ключ из Colab сюда)
-API_KEY = "ТВОЙ_API_KEY_ИЗ_КОЛАБА" 
-CITY = "Almaty"
-
-# --- СТИЛИЗАЦИЯ (PREMIUM DARK UI) ---
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #0F172A; color: #F8FAFC; }
-    .stMetric { background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 16px; padding: 20px; }
-    .main { background: radial-gradient(circle at top right, #1e293b, #0f172a); }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- ФУНКЦИЯ ПОЛУЧЕНИЯ РЕАЛЬНЫХ ДАННЫХ (ТВОЯ ЛОГИКА) ---
-def get_weather_data():
-    # Здесь используется твоя логика из Colab для запроса к API
-    # Для примера создаем структуру, которую ты наполняешь своими вызовами:
-    try:
-        # url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric"
-        # res = requests.get(url).json()
-        return {
-            "temp": 12, "wind": 1.2, "hum": 65, "press": 1020
-        }
-    except:
-        return {"temp": 0, "wind": 0, "hum": 0, "press": 0}
-
-weather = get_weather_data()
-
-# --- ШАПКА САЙТА ---
-st.markdown("# 🏔️ PROJECT A.L.G.O.R.I.T.H.M.")
-st.markdown("### Ситуационный центр контроля воздушного бассейна Алматы")
-st.write("---")
-
-# --- ВКЛАДКИ ---
-tab1, tab2, tab3 = st.tabs(["🛰️ ОПЕРАТИВНЫЙ ПРОГНОЗ", "💡 ИННОВАЦИИ И 3D", "📊 СТРАТЕГИЯ SROI"])
-
-# --- ВКЛАДКА 1: МОНИТОРИНГ ---
-with tab1:
-    # 1. Метрики реального времени
+def show_tab1():
+    st.markdown("## 🛰️ МОНИТОРИНГ: АЛМАТЫ LIVE")
+    
+    # 1. СТАТИСТИКА (Метрики)
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("PM2.5 (ТЕКУЩИЙ)", "148 µg/m³", "⚠ Опасно")
-    with col2:
-        st.metric("ВЕРОЯТНОСТЬ ИНВЕРСИИ", "92%", "КРИТИЧЕСКИ", delta_color="inverse")
-    with col3:
-        st.metric("СКОРОСТЬ ВЕТРА", f"{weather['wind']} м/с", "ШТИЛЬ")
-    with col4:
-        st.metric("ВЛАЖНОСТЬ", f"{weather['hum']}%", "ВЫСОКАЯ")
+    with col1: st.metric("PM2.5 СРЕДНИЙ", "158", "⚠ Опасно")
+    with col2: st.metric("ИНВЕРСИЯ", "ЕСТЬ", "89%", delta_color="inverse")
+    with col3: st.metric("ВЕТЕР", "0.5 м/с", "ШТИЛЬ")
+    with col4: st.metric("ВЛАЖНОСТЬ", "68%", "СРЕДНЯЯ")
 
-    st.write("##")
-
-    # 2. Основная 3D Карта и AI Консоль
-    c_map, c_ai = st.columns([2, 1])
-    
-    with c_map:
-        st.subheader("📍 3D Рельеф Загрязнения (Алматы)")
-        # Создаем реальный 3D рельеф через Mesh-сетку
-        x = np.linspace(-5, 5, 50)
-        y = np.linspace(-5, 5, 50)
-        X, Y = np.meshgrid(x, y)
-        Z = np.exp(-(X**2 + Y**2)/10) * 100 # Имитация концентрации в низине
-        
-        fig_3d = go.Figure(data=[go.Surface(z=Z, colorscale='Inferno', showscale=False)])
-        fig_3d.update_layout(
-            scene=dict(bgcolor='#0F172A', xaxis_title="Запад-Восток", yaxis_title="Север-Юг"),
-            margin=dict(l=0, r=0, t=0, b=0), height=500, template="plotly_dark"
-        )
-        st.plotly_chart(fig_3d, use_container_width=True)
-
-    with c_ai:
-        st.info("### 🤖 Голос Искусственного Интеллекта")
-        st.markdown(f"""
-        **Анализ данных:**
-        - Температура: **{weather['temp']}°C**
-        - Давление: **{weather['press']} hPa**
-        
-        **Вердикт системы:**
-        Температурный градиент отрицательный. Воздушные массы заблокированы в нижней части города. 
-        Прогноз на 24 часа: **Ухудшение на 15%** из-за отсутствия ветра.
-        """)
-        st.warning("🎯 Рекомендация: Ввести ограничение на въезд транспорта Euro-3 в квадрат улиц Аль-Фараби - Саина.")
-
-    # 3. Прогноз на 7 дней с детализацией по часам
     st.write("---")
-    st.subheader("📅 Интерактивный прогноз на 7 дней (Почасовой)")
-    
-    days = [(datetime.now() + timedelta(days=i)).strftime("%d.%m") for i in range(7)]
-    selected_day = st.select_slider("Перемещайте ползунок для выбора дня:", options=days)
 
-    # Генерация данных прогноза (Тут работает твоя LSTM модель)
+    # 2. РЕАЛЬНАЯ КАРТА (MAPBOX)
+    st.subheader("📍 Интерактивная карта районов")
+    
+    # Создаем карту через Plotly Mapbox (профессиональный темный стиль)
+    fig_map = px.scatter_mapbox(
+        locations, lat="lat", lon="lon", 
+        color="PM25", size="PM25",
+        color_continuous_scale="Reds", 
+        hover_name="Район", 
+        zoom=11, height=600
+    )
+    
+    fig_map.update_layout(
+        mapbox_style="carto-darkmatter", # Тот самый "черный" профессиональный стиль
+        margin={"r":0,"t":0,"l":0,"b":0},
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    st.plotly_chart(fig_map, use_container_width=True)
+
+    # 3. ГРАФИК ПРОГНОЗА (7 ДНЕЙ / 24 ЧАСА)
+    st.write("---")
+    st.subheader("📅 Прогноз ALGORITHM AI (7 дней)")
+    
+    # Создаем выбор дня
+    days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    selected_day = st.select_slider("Выберите день для детального анализа:", options=days)
+    
+    # Генерация почасового графика (твоя логика из Colab)
     hours = list(range(24))
-    prediction = [40 + np.sin(h/4)*30 + 50 for h in hours] # Имитация работы твоей нейросети
+    # Пример: ночью смог выше (инверсия), днем чуть ниже
+    values = [180, 190, 200, 210, 190, 150, 120, 100, 90, 110, 130, 140, 150, 160, 170, 160, 150, 160, 180, 200, 210, 220, 200, 190]
     
     fig_line = go.Figure()
-    fig_line.add_trace(go.Scatter(x=hours, y=prediction, fill='tozeroy', 
-                                 line=dict(color='#00D4FF', width=3), name="Прогноз PM2.5"))
+    fig_line.add_trace(go.Scatter(
+        x=hours, y=values, 
+        mode='lines+markers', 
+        name='Прогноз PM2.5',
+        line=dict(color='#00f2ff', width=4),
+        fill='tozeroy', # Заливка под графиком для красоты
+        fillcolor='rgba(0, 242, 255, 0.1)'
+    ))
+    
     fig_line.update_layout(
-        title=f"Детальный анализ на {selected_day} (24 часа)",
-        xaxis=dict(title="Часы суток", tickmode='linear'),
-        yaxis=dict(title="µg/m³"),
-        template="plotly_dark", height=350, margin=dict(l=20, r=20, t=40, b=20)
+        title=f"Почасовая детализация: {selected_day}",
+        template="plotly_dark",
+        xaxis=dict(title="Час суток", gridcolor="#30363d"),
+        yaxis=dict(title="PM2.5", gridcolor="#30363d"),
+        height=400
     )
+    
     st.plotly_chart(fig_line, use_container_width=True)
 
-# --- ОСТАЛЬНЫЕ ВКЛАДКИ (ЗАГЛУШКИ ДЛЯ ТВОЕГО ЗАПОЛНЕНИЯ) ---
-with tab2:
-    st.header("В разработке: 3D сравнение технологий...")
-    st.write("Здесь будет твой блок с машинами и легкими.")
-
-with tab3:
-    st.header("В разработке: Экономическая стратегия...")
-    st.write("Здесь будут расчеты SROI и налогов.")
+show_tab1()
