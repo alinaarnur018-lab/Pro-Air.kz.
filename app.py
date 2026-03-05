@@ -2,61 +2,79 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 
-# Настройка страницы
-st.set_page_config(page_title="ALGORITHM AI", layout="wide")
+# --- НАСТРОЙКИ СТИЛЯ (CYBER DARK) ---
+st.set_page_config(page_title="ALGORITHM SENTINEL", layout="wide", initial_sidebar_state="collapsed")
 
-# Темная тема и стиль
 st.markdown("""
     <style>
-    .main { background-color: #0E1117; color: #ffffff; }
-    .stMetric { background-color: #161B22; border: 1px solid #30363D; padding: 15px; border-radius: 10px; }
+    .main { background-color: #0B0E14; color: #ffffff; }
+    [data-testid="stHeader"] { background: rgba(0,0,0,0); }
+    .stTabs [data-baseweb="tab-list"] { gap: 24px; background-color: #0B0E14; }
+    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #161B22; border-radius: 10px 10px 0 0; color: white; }
+    .stMetric { background: #161B22; border: 1px solid #30363D; border-radius: 15px; padding: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🏔️ Project A.L.G.O.R.I.T.H.M.")
-st.write("### AI-Driven Air Quality Control System")
+# --- ВЕРХНЯЯ ПАНЕЛЬ ---
+st.title("🏔️ ALGORITHM SENTINEL")
+st.caption("Autonomous Logistic Global Observation & Real-time Integrated Thermal Monitoring")
 
-# Твоя математика AQI
-def calculate_aqi(pm):
-    if pm <= 12: return int(pm * 4.1)
-    elif pm <= 35.4: return int(50 + (pm - 12.1) * 2.1)
-    elif pm <= 55.4: return int(100 + (pm - 35.5) * 2.5)
-    else: return int(150 + (pm - 55.5) * 0.52)
+# --- СОЗДАНИЕ ВКЛАДОК ---
+tab1, tab2, tab3 = st.tabs(["🛰️ MONITORING", "💡 INNOVATION", "📊 STRATEGY"])
 
-# Колонки для данных
-col1, col2, col3 = st.columns(3)
+# --- ВКЛАДКА 1: МОНИТОРИНГ ---
+with tab1:
+    col_map, col_ctrl = st.columns([3, 1])
+    
+    with col_ctrl:
+        st.subheader("AI Agent Console")
+        pm_val = st.slider("Simulated PM2.5", 0, 250, 45)
+        risk = "HIGH" if pm_val > 100 else "STABLE"
+        st.error(f"STATUS: {risk}")
+        st.info("PREDICTION: Inversion risk 87% within 4h")
+        
+    with col_map:
+        # Имитация карты Алматы через Heatmap
+        map_data = np.random.rand(10, 10) * pm_val
+        fig_map = px.imshow(map_data, color_continuous_scale='Turbo', origin='lower')
+        fig_map.update_layout(template="plotly_dark", height=450, margin=dict(l=0,r=0,t=0,b=0))
+        st.plotly_chart(fig_map, use_container_width=True)
 
-with st.sidebar:
-    st.header("⚙️ Контроль")
-    pm_input = st.slider("Концентрация PM2.5", 0, 250, 45)
-    st.write("Модель: LSTM Neural Network")
+# --- ВКЛАДКА 2: ИННОВАЦИЯ (3D СРАВНЕНИЕ) ---
+with tab2:
+    st.header("Innovation Spotlight: Mobility Transition")
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.markdown("### 🚗 Old Tech (Pre-2014)")
+        st.warning("Respiratory Stress: HIGH [92%]")
+        # Здесь мы имитируем 3D-модель через график (пока нет .glb файла)
+        st.image("https://img.icons8.com/plasticine/200/car--v1.png") # Заглушка
+        st.write("**Eco-Levy Cost:** $15/Day")
+        
+    with c2:
+        st.markdown("### 🔋 Hybrid/Electric")
+        st.success("Respiratory Relief: ACTIVE [95%]")
+        st.image("https://img.icons8.com/fluency/200/electric-car.png") # Заглушка
+        st.write("**Green Loan Rate:** 2.5% APR")
 
-aqi_val = calculate_aqi(pm_input)
+    st.divider()
+    st.subheader("Interactive Health Impact")
+    health_val = st.progress(pm_val / 250 if pm_val < 250 else 1.0)
+    st.caption(f"Lung Particle Saturation: {pm_val//2}%")
 
-with col1:
-    st.metric("CURRENT AQI", f"{aqi_val}")
-with col2:
-    status = "STABLE" if aqi_val < 100 else "CRITICAL"
-    st.metric("SYSTEM STATUS", status)
-with col3:
-    st.metric("PROBABILITY", f"{min(aqi_val // 2, 100)}%")
-
-# График прогноза
-st.subheader("📈 Предсказание нейросети (48 часов)")
-time = [f"+{i}h" for i in range(24)]
-values = [pm_input + np.sin(i/3)*15 + i for i in range(24)]
-fig = go.Figure(go.Scatter(x=time, y=values, fill='tozeroy', line=dict(color='#00d4ff')))
-fig.update_layout(template="plotly_dark", height=300, margin=dict(l=0,r=0,t=0,b=0))
-st.plotly_chart(fig, use_container_width=True)
-
-# Экономический блок (Твоя инновация)
-st.divider()
-st.subheader("🏛️ Экономическое регулирование")
-
-if aqi_val > 120:
-    st.error("🚨 ВНИМАНИЕ: Прогноз смога подтвержден!")
-    st.warning("**STICK (Налог):** Активирован эко-сбор для въезда в центр города.")
-    st.success("**CARROT (Стимул):** Доступна ставка 2.5% на покупку электрокаров.")
-else:
-    st.info("Режим: **НОРМА**. Экономические ограничения не требуются.")
+# --- ВКЛАДКА 3: СТРАТЕГИЯ ---
+with tab3:
+    st.subheader("SROI: Social Return on Investment")
+    st.write("Каждый 1 тенге, вложенный в субсидии, экономит 5.4 тенге в бюджете здравоохранения.")
+    
+    # График распределения средств
+    fund_data = pd.DataFrame({
+        'Sector': ['EV Subsidies', 'Urban Forestry', 'Infrastructure'],
+        'Amount': [45, 30, 25]
+    })
+    fig_fund = px.pie(fund_data, values='Amount', names='Sector', hole=.3, color_discrete_sequence=px.colors.sequential.Teal)
+    fig_fund.update_layout(template="plotly_dark")
+    st.plotly_chart(fig_fund)
